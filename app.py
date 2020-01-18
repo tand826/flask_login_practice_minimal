@@ -12,16 +12,18 @@ users = {"foo@bar": {"password": "secret"}}
 
 
 class User(UserMixin):
-    pass
+
+    def __init__(self, email):
+        self.email = email
+        self.id = email
+        self.exists = email in users
 
 
 @login_manager.user_loader
 def user_loader(email):
     if email not in users:
         return
-    user = User()
-    user.id = email
-    user.exists = True
+    user = User(email)
     return user
 
 
@@ -30,9 +32,7 @@ def request_loader(request):
     email = request.form.get("email")
     if email not in users:
         return
-    user = User()
-    user.id = email
-    user.exists = True
+    user = User(email)
 
     user.is_authenticated = request.form["password"] == users[email]["password"]
     return user
@@ -51,9 +51,7 @@ def login():
                '''
 
     email = flask.request.form['email']
-    user = User()
-    user.id = email
-    user.exists = email in users
+    user = User(email)
     if user.exists and flask.request.form['password'] == users[email]['password']:
         login_user(user)
         return redirect(url_for('secret'))
